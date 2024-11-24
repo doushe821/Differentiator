@@ -1,7 +1,7 @@
 #ifndef NODE_STRUCT_H_INCLUDED
 #define NODE_STRUCT_H_INCLUDED
 
-const size_t BASE_NODE_SIZE = 28;
+const size_t BASE_NODE_SIZE = 32;
 
 typedef void* Node_t;
 

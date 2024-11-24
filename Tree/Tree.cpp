@@ -20,6 +20,7 @@ enum ErrCodes
     FILE_CREATION_ERROR = -7,
     FILE_NULL_PTR = -8,
     FIELD_CODE_NOT_FOUND = -9,
+    OUT_OF_KIDS = -10,
 };
 
 Node_t CreateNode(size_t type, Node_t parent, size_t datasize, void* data, size_t fertility, ...)
@@ -27,8 +28,6 @@ Node_t CreateNode(size_t type, Node_t parent, size_t datasize, void* data, size_
     const u_int64_t ZERO_ADDRESS = 0;
 
     size_t nodesize = sizeof(type) + sizeof(parent) + sizeof(fertility) + sizeof(void*) * fertility + sizeof(datasize) + datasize;
-    
-    MEOW("Nodesize = %zu\n", nodesize);
 
     void* node = {};
     node = calloc(1, nodesize);
@@ -40,18 +39,12 @@ Node_t CreateNode(size_t type, Node_t parent, size_t datasize, void* data, size_
     }
 
     size_t memIndex = 0;
-    
-    MEOW("Node = %p\n", node);
 
     memcpy((char*)node, &type, sizeof(type));
     memIndex += sizeof(type);
 
-    MEOW("node: type = %d\n", *((int*)node));
-    MEOW("MemIndex = %zu\n", memIndex);
-
     if(parent == NULL)
     {
-        MEOW("node + memindex = %p\n", (char*)node + memIndex);
         memcpy((char*)node + memIndex, &ZERO_ADDRESS, sizeof(u_int64_t));
     }
     else
@@ -60,12 +53,9 @@ Node_t CreateNode(size_t type, Node_t parent, size_t datasize, void* data, size_
     }
     memIndex += sizeof(parent);
 
-    MEOW("MemIndex = %zu\n", memIndex);
 
     memcpy((char*)node + memIndex, &fertility, sizeof(fertility));
     memIndex += sizeof(fertility);
-
-    MEOW("MemIndex = %zu\n", memIndex);
 
     va_list kidPTRs;
     va_start(kidPTRs, fertility);
@@ -78,24 +68,87 @@ Node_t CreateNode(size_t type, Node_t parent, size_t datasize, void* data, size_
         }
         else
         {
-            MEOW("\033[31mPTR is : %p\n\033[0m", ptr);
-            MEOW("MEMINDEX = %zu\n", memIndex);
             memcpy((char*)node + memIndex, &ptr, sizeof(Node_t));
         }
         memIndex += sizeof(Node_t);
     }
 
-    MEOW("MemIndex = %zu\n", memIndex);
-
     memcpy((char*)node + memIndex, &datasize, sizeof(datasize));
     memIndex += sizeof(datasize);
 
-    MEOW("MemIndex = %zu\n", memIndex);
+    if(data == NULL)
+    {
+        memcpy((char*)node + memIndex, &ZERO_ADDRESS, datasize);
+    }
+    else
+    {
+        memcpy((char*)node + memIndex, data, datasize);
+    }
 
-    memcpy((char*)node + memIndex, data, datasize);
-
-    MEOW("\033[33mReturning: %p\n\033[0m", node);
     return node;
+}
+
+int AddNode(Node_t node, Node_t parent, size_t KidNum)
+{
+    if(node == NULL)
+    {
+        fprintf(stderr, "Node pointer is NULL\n");
+        return NODE_NULL_POINTER;
+    }
+    if(parent == NULL)
+    {
+        fprintf(stderr, "Parent pointer is NULL\n");
+        return NODE_NULL_POINTER;
+    }
+
+    if(KidNum > *(size_t*)((char*)parent + GetNodeMemShift(parent, FERTILITY_FIELD_CODE)))
+    {
+        fprintf(stderr, "No room for kid nodes %s:%d\n", __FILE__, __LINE__);
+        return OUT_OF_KIDS;
+    }
+    if(*(Node_t*)((char*)parent + GetNodeMemShift(parent, KIDS_FIELD_CODE) + sizeof(Node_t) * KidNum) != NULL)
+    {
+        fprintf(stderr, "Node occupied %s:%d\n", __FILE__, __LINE__);
+        return NODE_EXISTS;
+    }
+    MEOW("node = %p, parent = %p\n", node, parent);
+    memcpy((char*)parent + GetNodeMemShift(parent, KIDS_FIELD_CODE) + sizeof(Node_t) * KidNum, &node, sizeof(Node_t));
+    MEOW("KID: %p\n", *(Node_t*)((char*)parent + GetNodeMemShift(parent, KIDS_FIELD_CODE) + sizeof(Node_t) * KidNum));
+    memcpy((char*)node + GetNodeMemShift(node, PARENT_FIELD_CODE), &parent, sizeof(Node_t));
+    MEOW("PARENT: %p\n", *(Node_t*)((char*)node + GetNodeMemShift(parent, PARENT_FIELD_CODE)));
+
+    return 0;
+}
+
+int AddKid(Node_t parent, Node_t kid, size_t kidID)
+{
+    if(parent == NULL)
+    {
+        return NODE_NULL_POINTER;
+    }
+    if(kid == NULL)
+    {
+        return NODE_NULL_POINTER;
+    }
+
+    MEOW(GREEN_COLOR_ESC_SEQ "(DEBUG) |  Parent ptr = %p;  Kid ptr = %p,  KidID = %zu  (%s:%d)\n" DEFAULT_COLOR_ESC_SEQ, parent, kid, kidID, __FILE__, __LINE__);
+    memcpy((char*)parent + GetNodeMemShift(parent, KIDS_FIELD_CODE) + sizeof(Node_t) * kidID, &kid, sizeof(Node_t));
+    return 0;
+}
+
+int AddData(Node_t node, void* data)
+{
+    if(node == NULL)
+    {
+        return NODE_NULL_POINTER;
+    }
+    if(data == NULL)
+    {
+        return NODE_NULL_POINTER;
+    }
+
+    memcpy((char*)node + GetNodeMemShift(node, DATA_FIELD_CODE), data, *(size_t*)((char*)node + GetNodeMemShift(node, DATASIZE_FIELD_CODE)));
+    return 0;
 }
 
 int NodeDtor(Node_t node)
@@ -108,7 +161,7 @@ int NodeDtor(Node_t node)
 
     free(node);
 
-    return NO_ERRORS;
+    return 0;
 }
 
 int BurnTree(Node_t root)
@@ -128,7 +181,7 @@ int BurnTree(Node_t root)
     }
 
     free(root);
-    return NO_ERRORS;
+    return 0;
 }
 
 //  полиморфизм плюсы
@@ -159,15 +212,11 @@ int PrintTree(Node_t root, FILE* dest, void(DumpFunc(void* a, FILE* fp)), const 
     char sysCmd[FILENAME_MAX] = {};
     sprintf(sysCmd, "dot -Tpdf Dumps/%s -o Dumps/dump.dpf\n", filename);
     system(sysCmd);
-    return NO_ERRORS;
+    return 0;
 }
  
 Node_t GetKidNode(Node_t node, unsigned long num)
 {
-    MEOW(" MEJE SHIF = %zu\n", GetNodeMemShift(node, KIDS_FIELD_CODE));
-    void* tptr = (char*)node + ((unsigned long)GetNodeMemShift(node, KIDS_FIELD_CODE) + sizeof(Node_t) * num);
-    MEOW("\n\n\033[32m%p\n\n\n\033[0m", (void*)(*(u_int64_t*)tptr));
-
     return (*(Node_t*)((char*)node + GetNodeMemShift(node, KIDS_FIELD_CODE) + sizeof(Node_t) * num));
 }
 
@@ -179,7 +228,7 @@ void* GetNodeData(Node_t node)
 int AddParent(Node_t node, Node_t parent)
 {
     memcpy((char*)node + GetNodeMemShift(node, PARENT_FIELD_CODE), &parent, sizeof(Node_t));
-    return NO_ERRORS;
+    return 0;
 }
 
 void  NodePrint(Node_t node, void DumpFunc(void* a, FILE* fp), FILE* fp, size_t rank, size_t* ncounter)
@@ -228,8 +277,6 @@ void  NodePrint(Node_t node, void DumpFunc(void* a, FILE* fp), FILE* fp, size_t 
 int GetNodeMemShift(Node_t node, int fieldCode)
 {
     BaseNode bn = {};
-    MEOW("node adress is %p\n", node);
-    MEOW("field code = %d\n", fieldCode);
     switch(fieldCode)
     {
         case TYPE_FIELD_CODE:
@@ -250,7 +297,6 @@ int GetNodeMemShift(Node_t node, int fieldCode)
         }
         case DATASIZE_FIELD_CODE:
         {
-            MEOW("Number of kids: %zu\n", *(size_t*)((char*)node + GetNodeMemShift(node, FERTILITY_FIELD_CODE)));
             return GetNodeMemShift(node, KIDS_FIELD_CODE) + (int)(sizeof(bn.kids) * (*(size_t*)((char*)node + GetNodeMemShift(node, FERTILITY_FIELD_CODE))));
         }
         case DATA_FIELD_CODE:

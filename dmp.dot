@@ -1,0 +1,10 @@
+digraph g {
+fontname="Helvetica,Arial,sans-serif"node [fontname="Helvetica,Arial,sans-serif", color = "green"]
+graph [
+rankdir = "TB"
+];
+node [
+fontisze = "16"
+shape = "ellipse"
+];
+}

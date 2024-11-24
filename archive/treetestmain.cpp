@@ -11,12 +11,9 @@ int main()
     //FILE* source = fopen("test1.mxp", "a+b");
     double a = 1;
     double b = 2;
-    double c = 3;
-    Node_t node1 = CreateNode(0, NULL, sizeof(double), &a, 4, NewNode(0, NULL, &b, NULL, NULL), NewNode(0, NULL, &c, NULL, NULL), NewNode(0, NULL, &b, NULL, NULL), NewNode(0, NULL, &b, NULL, NULL));
-
-    MEOW("\033[32mnode1 left data = %lf\n\033[0m", *(double*)GetNodeData(node1));
-    MEOW("\033[32mnode1 left data = %lf\n\033[0m", GetNodeData(GetKidNode(node1, 0)));
-
+    Node_t node1 = CreateNode(0, NULL, sizeof(double), &a, 4, NULL, NULL, NULL, NULL);
+    Node_t node2 = CreateNode(0, NULL, sizeof(double), &b, 0);
+    AddNode(node2, node1, 1);
     FILE* dump = fopen("dump1", "w+b");
     const char* dddd = "dump1";
     PrintTree(node1, dump, DumpDoubleNode, dddd);

@@ -15,9 +15,12 @@ int  BurnTree       (Node_t root);
 void NodePrint     (Node_t node, void DumpFunc(void* a, FILE* fp), FILE* fp, size_t rank, size_t* ncounter);
 
 Node_t CreateNode(size_t type, Node_t parent, size_t datasize, void* data, size_t fertility, ...);
+int AddNode(Node_t node, Node_t parent, size_t KidNum);
 
+int AddKid(Node_t parent, Node_t kid, size_t kidID);
 Node_t GetKidNode(Node_t node, unsigned long num);
 void* GetNodeData(Node_t node);
 int AddParent(Node_t node, Node_t parent);
+int AddData(Node_t node, void* data);
 
 #endif

@@ -6,13 +6,23 @@
 #include "DBTools/DBTools.h"
 #include "Tree/Tree.h"
 #include "Tree/NodeStruct.h"
+#include "List/List.h"
 
 enum Errors 
 {
     NULL_PTR_PARAM = -12,
     SYNTAX_ERROR,
-    OPERATION_NOT_FOUND,
-    NO_ERRORS = 0,
+    LIST_INITIALIZATION_FAILURE,
+    READING_ERROR,
+    ALLOCATION_FAILURE,
+};
+
+struct NodeTypeIdentifier
+{
+    int Type;
+    double Value;
+    int Code;
+    int VarName;
 };
 
 const size_t DIFF_NODE_SIZE = BASE_NODE_SIZE + 16 + 8;
@@ -21,15 +31,12 @@ const size_t DIFF_NODE_SIZE = BASE_NODE_SIZE + 16 + 8;
 
 const size_t OP_NAME_MAX = 7;
 
-struct operation
-{
-    char name[OP_NAME_MAX];
-    int code;
-    int priority;
-};
 
-const size_t NUMBER_OF_OPERATIONS = 23;
+const size_t NUMBER_OF_OPERATIONS = 5;
 const size_t NUMBER_OF_ARG_TYPES = 3;
+const size_t NUMBER_OF_FUNTIONS = 18;
+const int OPERATION_NOT_FOUND = -10;
+const int FUNCTION_NOT_FOUND = -11;
 
 struct argtype 
 {
@@ -40,6 +47,15 @@ struct argtype
 const int CONST_VALUE_TYPE_CODE = 0;
 const int OPERATION_TYPE_CODE = 1;
 const int VARIABLE_VALUE_TYPE_CODE = 2;
+const int FUNCTION_TYPE_CODE = 3;
+
+struct operation
+{
+    char name[OP_NAME_MAX];
+    int code;
+    int priority;
+};
+
 
 const operation operations[NUMBER_OF_OPERATIONS] = 
 {
@@ -48,27 +64,42 @@ const operation operations[NUMBER_OF_OPERATIONS] =
     {"*"     , 3 , 1},
     {"/"     , 4 , 1},
     {"^"     , 5 , 2},
-    {"sin"   , 6 , 2},
-    {"cos"   , 7 , 2},
-    {"tg"    , 8 , 2},
-    {"ctg"   , 9 , 2},
-    {"arcsin", 10, 2},
-    {"arccos", 10, 2},
-    {"arctg" , 11, 2},
-    {"arcctg", 12, 2},
-    {"sh"    , 13, 2},
-    {"ch"    , 14, 2},
-    {"th"    , 15, 2},
-    {"cth"   , 16, 2},
-    {"arcsh" , 17, 2},
-    {"arcch" , 18, 2},
-    {"arcth" , 19, 2},
-    {"arccth", 20, 2},
-    {"log"   , 21, 2},
-    {"ln"    , 22, 2},
 };
 
-int GetLongOpCode(char* buffer);
-int GetShortOpCode(int code);
+struct function
+{
+    char name[OP_NAME_MAX];
+    int code;
+};
+
+const function functions[NUMBER_OF_FUNTIONS]
+{
+    {"sin"   ,       1},
+    {"cos"   ,       2},
+    {"arcsin",       3},
+    {"arccos",       4},
+    {"tg"    ,       5},
+    {"ctg"   ,       6},
+    {"arctg" ,       7},
+    {"arcctg",       8},
+    {"sh"    ,       9},
+    {"ch"    ,      10},
+    {"arcsh" ,      11},
+    {"arcch" ,      12},
+    {"th"    ,      13},
+    {"cth"   ,      14},
+    {"arcth" ,      15},
+    {"arccth",      16},
+    {"log"   ,      17},
+    {"ln"    ,      18},
+}; 
+
+int GetFuncCode(const char* buffer);
+    
+NodeTypeIdentifier GetNodeType(const char* SubExpression);
+Node_t ReadNode(const char* ExpressionString, size_t* StringIndex, List_t* List, Node_t Parent ON_DEBUG(COMMA size_t* iteration));
+size_t GetFileSize(FILE* fp);
+
+void EmergentDtor(FILE* fp, List_t* NodeList, char* ExpressionString, Node_t root, FILE* dmp);
 
 #endif
