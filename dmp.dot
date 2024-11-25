@@ -7,4 +7,93 @@ node [
 fontisze = "16"
 shape = "ellipse"
 ];
+"node1" [
+rank = 1
+"label" = "{<parent> Parent = (nil)|<adr> Node Address =  0x51c000000278| <type> Type = 1|<f0> Data = /|{<f2> Kid№ 0 = 0x51c0000001d0 |<f3> Kid№ 1 = 0x51c0000002b0 }}"
+shape = "record"
+];
+node1: <f2> -> node2[color = "brown"];
+"node2" [
+rank = 2
+"label" = "{<parent> Parent = 0x51c000000278|<adr> Node Address =  0x51c0000001d0| <type> Type = 1|<f0> Data = +|{<f2> Kid№ 0 = 0x51c000000160 |<f3> Kid№ 1 = 0x51c000000208 }}"
+shape = "record"
+];
+node2: <f2> -> node3[color = "brown"];
+"node3" [
+rank = 3
+"label" = "{<parent> Parent = 0x51c0000001d0|<adr> Node Address =  0x51c000000160| <type> Type = 1|<f0> Data = +|{<f2> Kid№ 0 = 0x51c0000000f0 |<f3> Kid№ 1 = 0x51c000000198 }}"
+shape = "record"
+];
+node3: <f2> -> node4[color = "brown"];
+"node4" [
+rank = 4
+"label" = "{<parent> Parent = 0x51c000000160|<adr> Node Address =  0x51c0000000f0| <type> Type = 1|<f0> Data = +|{<f2> Kid№ 0 = 0x51c0000000b8 |<f3> Kid№ 1 = 0x51c000000128 }}"
+shape = "record"
+];
+node4: <f2> -> node5[color = "brown"];
+"node5" [
+rank = 5
+"label" = "{<parent> Parent = 0x51c0000000f0|<adr> Node Address =  0x51c0000000b8| <type> Type = 0|<f0> Data = 1.000000|{<f2> Kid№ 0 = (nil) |<f3> Kid№ 1 = (nil) }}"
+shape = "record"
+];
+node4: <f3> -> node6[color = "brown"];
+"node6" [
+rank = 5
+"label" = "{<parent> Parent = 0x51c0000000f0|<adr> Node Address =  0x51c000000128| <type> Type = 0|<f0> Data = 2.000000|{<f2> Kid№ 0 = (nil) |<f3> Kid№ 1 = (nil) }}"
+shape = "record"
+];
+node3: <f3> -> node7[color = "brown"];
+"node7" [
+rank = 4
+"label" = "{<parent> Parent = 0x51c000000160|<adr> Node Address =  0x51c000000198| <type> Type = 0|<f0> Data = 3.000000|{<f2> Kid№ 0 = (nil) |<f3> Kid№ 1 = (nil) }}"
+shape = "record"
+];
+node2: <f3> -> node8[color = "brown"];
+"node8" [
+rank = 3
+"label" = "{<parent> Parent = 0x51c0000001d0|<adr> Node Address =  0x51c000000208| <type> Type = 3|<f0> Data = sin|{<f2> Kid№ 0 = 0x51c000000240 |<f3> Kid№ 1 = (nil) }}"
+shape = "record"
+];
+node8: <f2> -> node9[color = "brown"];
+"node9" [
+rank = 4
+"label" = "{<parent> Parent = 0x51c000000208|<adr> Node Address =  0x51c000000240| <type> Type = 0|<f0> Data = 9.000000|{<f2> Kid№ 0 = (nil) |<f3> Kid№ 1 = (nil) }}"
+shape = "record"
+];
+node1: <f3> -> node10[color = "brown"];
+"node10" [
+rank = 2
+"label" = "{<parent> Parent = 0x51c000000278|<adr> Node Address =  0x51c0000002b0| <type> Type = 3|<f0> Data = ln|{<f2> Kid№ 0 = 0x51c0000002e8 |<f3> Kid№ 1 = (nil) }}"
+shape = "record"
+];
+node10: <f2> -> node11[color = "brown"];
+"node11" [
+rank = 3
+"label" = "{<parent> Parent = 0x51c0000002b0|<adr> Node Address =  0x51c0000002e8| <type> Type = 3|<f0> Data = th|{<f2> Kid№ 0 = 0x51c000000320 |<f3> Kid№ 1 = (nil) }}"
+shape = "record"
+];
+node11: <f2> -> node12[color = "brown"];
+"node12" [
+rank = 4
+"label" = "{<parent> Parent = 0x51c0000002e8|<adr> Node Address =  0x51c000000320| <type> Type = 3|<f0> Data = sh|{<f2> Kid№ 0 = 0x51c000000358 |<f3> Kid№ 1 = (nil) }}"
+shape = "record"
+];
+node12: <f2> -> node13[color = "brown"];
+"node13" [
+rank = 5
+"label" = "{<parent> Parent = 0x51c000000320|<adr> Node Address =  0x51c000000358| <type> Type = 3|<f0> Data = cth|{<f2> Kid№ 0 = 0x51c000000390 |<f3> Kid№ 1 = (nil) }}"
+shape = "record"
+];
+node13: <f2> -> node14[color = "brown"];
+"node14" [
+rank = 6
+"label" = "{<parent> Parent = 0x51c000000358|<adr> Node Address =  0x51c000000390| <type> Type = 3|<f0> Data = arcth|{<f2> Kid№ 0 = 0x51c0000003c8 |<f3> Kid№ 1 = (nil) }}"
+shape = "record"
+];
+node14: <f2> -> node15[color = "brown"];
+"node15" [
+rank = 7
+"label" = "{<parent> Parent = 0x51c000000390|<adr> Node Address =  0x51c0000003c8| <type> Type = 2|<f0> Data = x|{<f2> Kid№ 0 = (nil) |<f3> Kid№ 1 = (nil) }}"
+shape = "record"
+];
 }

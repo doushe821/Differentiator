@@ -6,7 +6,7 @@
 
 
 char* FReadBuffer(FILE* fp);
-void DumpDoubleNode(void* a, FILE* fp);
+void DumpNode(const void* a, FILE* fp, size_t type);
 
 const size_t INITIAL_LIST_SIZE = 32;
 
@@ -37,7 +37,7 @@ int main()
 
     MEOW(MAGENTA_COLOR_ESC_SEQ "(DEBUG) | %s\n" DEFAULT_COLOR_ESC_SEQ, ExpressionString);
 
-    size_t StringIndex = 1;
+    size_t StringIndex = 0;
 
     ON_DEBUG(size_t iteration);
 
@@ -49,6 +49,9 @@ int main()
         return READING_ERROR;
     }
 
+    MEOW(YELLOW_COLOR_ESC_SEQ "(DEBUG)  |  All nodes read (%s:%d)\n" DEFAULT_COLOR_ESC_SEQ, __FILE__, __LINE__);
+    MEOW("root left = %p, root right = %p, number of nodes = %zu\n", GetKidNode(root, 0), GetKidNode(root, 0), GetFreeInd(NodeList));
+
     FILE* dmp = fopen("dmp.dot", "w+b");
     if(dmp == NULL)
     {
@@ -57,21 +60,53 @@ int main()
         return -1;
     }
     const char* filename = "dmp.dot";
-    PrintTree(root, dmp, DumpDoubleNode, filename);
 
+    PrintTree(root, dmp, DumpNode, filename);
+    
     fclose(dmp);
-    BurnTree(root);
     free(ExpressionString);
     ListDstr(NodeList);
     fclose(fp);
     return 0;
 }
 
-void DumpDoubleNode(void* a, FILE* fp)
+void DumpNode(const void* a, FILE* fp, size_t type)
 {
-    double val = 0;
-    memcpy(&val, a, sizeof(double));
-    fprintf(fp, "%lf", val);
+    switch(type)
+    {
+        case CONST_VALUE_TYPE_CODE:
+        {
+            double value = 0;
+            memcpy(&value, a, sizeof(value));
+            fprintf(fp, "%lf", value);
+            return;
+        }
+        case OPERATION_TYPE_CODE:
+        {
+            int op = 0;
+            memcpy(&op, a, sizeof(op));
+            fprintf(fp, "%c", operations[op - 1].name);
+            return;
+        }
+        case VARIABLE_VALUE_TYPE_CODE:
+        {
+            int var = 0;
+            memcpy(&var, a, sizeof(var));
+            fprintf(fp, "%c", var);
+            return;
+        }
+        case FUNCTION_TYPE_CODE:
+        {
+            int func = 0;
+            memcpy(&func, a, sizeof(func));
+            fprintf(fp, "%s", functions[func - 1].name);
+            return;
+        }
+        default:
+        {
+            return;
+        }
+    }
 }
 
 char* FReadBuffer(FILE* fp)

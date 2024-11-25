@@ -17,15 +17,18 @@ enum Errors
     ALLOCATION_FAILURE,
 };
 
-struct NodeTypeIdentifier
-{
-    int Type;
-    double Value;
-    int Code;
-    int VarName;
-};
-
 const size_t DIFF_NODE_SIZE = BASE_NODE_SIZE + 16 + 8;
+
+struct DiffBaseNode
+{
+    size_t type;
+    Node_t parent;
+    size_t fertility;
+    size_t kid1;
+    size_t kid2;
+    size_t datasize;
+    double data;
+};
 
 #define NewNode(type, parent, value, left, right) CreateNode(type, parent, sizeof(double), (value), 2, left, right)
 
@@ -49,57 +52,59 @@ const int OPERATION_TYPE_CODE = 1;
 const int VARIABLE_VALUE_TYPE_CODE = 2;
 const int FUNCTION_TYPE_CODE = 3;
 
+const BaseNode FILLER_NODE = {};
+
 struct operation
 {
-    char name[OP_NAME_MAX];
+    char name;
     int code;
-    int priority;
+    int DiffFunc(List_t* list, Node_t Node);
 };
-
-
 const operation operations[NUMBER_OF_OPERATIONS] = 
 {
-    {"+"     , 1 , 0},
-    {"-"     , 2 , 0},
-    {"*"     , 3 , 1},
-    {"/"     , 4 , 1},
-    {"^"     , 5 , 2},
+    {'+'     , 1, DiffSum},
+    {'-'     , 2, DiffSum},
+    {'*'     , 3, DiffMul},
+    {'/'     , 4, DiffDiv},
+    {'^'     , 5, DiffPow},
 };
 
 struct function
 {
     char name[OP_NAME_MAX];
     int code;
+    int DiffFunc(List_t* list, Node_t Node);
 };
-
 const function functions[NUMBER_OF_FUNTIONS]
 {
-    {"sin"   ,       1},
-    {"cos"   ,       2},
-    {"arcsin",       3},
-    {"arccos",       4},
-    {"tg"    ,       5},
-    {"ctg"   ,       6},
-    {"arctg" ,       7},
-    {"arcctg",       8},
-    {"sh"    ,       9},
-    {"ch"    ,      10},
-    {"arcsh" ,      11},
-    {"arcch" ,      12},
-    {"th"    ,      13},
-    {"cth"   ,      14},
-    {"arcth" ,      15},
-    {"arccth",      16},
-    {"log"   ,      17},
-    {"ln"    ,      18},
+    {"sin"   ,       1,    FDiffSin},
+    {"cos"   ,       2,    FDiffCos},
+    {"arcsin",       3, FDiffArcsin},
+    {"arccos",       4, FDiffArccos},
+    {"tg"    ,       5,     FDiffTg},
+    {"ctg"   ,       6,    FDiffCtg},
+    {"arctg" ,       7,  FDiffArctg},
+    {"arcctg",       8, FDiffArcctg},
+    {"sh"    ,       9,     FDiffSh},
+    {"ch"    ,      10,     FDiffCh},
+    {"arcsh" ,      11, FDiffArchsh},
+    {"arcch" ,      12,  FDiffArcch},
+    {"th"    ,      13,     FDiffTh},
+    {"cth"   ,      14,    FDiffCth},
+    {"arcth" ,      15,  FDiffArcth},
+    {"arccth",      16, FDiffArccth},
+    {"log"   ,      17,    FDiffLog},
+    {"ln"    ,      18,     FDiffLn},
 }; 
 
 int GetFuncCode(const char* buffer);
     
-NodeTypeIdentifier GetNodeType(const char* SubExpression);
 Node_t ReadNode(const char* ExpressionString, size_t* StringIndex, List_t* List, Node_t Parent ON_DEBUG(COMMA size_t* iteration));
 size_t GetFileSize(FILE* fp);
 
 void EmergentDtor(FILE* fp, List_t* NodeList, char* ExpressionString, Node_t root, FILE* dmp);
 
+Node_t CreateNodeList(List_t* list, size_t type, Node_t parent, void* data, Node_t left, Node_t right);
+
+int GetOpCode(int code);
 #endif

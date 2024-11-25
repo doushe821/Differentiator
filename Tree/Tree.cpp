@@ -25,7 +25,6 @@ enum ErrCodes
 
 Node_t CreateNode(size_t type, Node_t parent, size_t datasize, void* data, size_t fertility, ...)
 {
-    const u_int64_t ZERO_ADDRESS = 0;
 
     size_t nodesize = sizeof(type) + sizeof(parent) + sizeof(fertility) + sizeof(void*) * fertility + sizeof(datasize) + datasize;
 
@@ -186,7 +185,7 @@ int BurnTree(Node_t root)
 
 //  полиморфизм плюсы
 
-int PrintTree(Node_t root, FILE* dest, void(DumpFunc(void* a, FILE* fp)), const char* filename)
+int PrintTree(Node_t root, FILE* dest, void(DumpFunc(const void* a, FILE* fp, size_t type)), const char* filename)
 {
     if(dest == NULL)
     {
@@ -207,7 +206,7 @@ int PrintTree(Node_t root, FILE* dest, void(DumpFunc(void* a, FILE* fp)), const 
     "];\n"                );
 
     size_t ncounter = 0;
-    NodePrint(root, DumpFunc, dest, 0, &ncounter);
+    NodePrint(root, dest, 0, &ncounter, DumpFunc);
     fprintf(dest, "}");
     char sysCmd[FILENAME_MAX] = {};
     sprintf(sysCmd, "dot -Tpdf Dumps/%s -o Dumps/dump.dpf\n", filename);
@@ -231,8 +230,11 @@ int AddParent(Node_t node, Node_t parent)
     return 0;
 }
 
-void  NodePrint(Node_t node, void DumpFunc(void* a, FILE* fp), FILE* fp, size_t rank, size_t* ncounter)
+void  NodePrint(Node_t node, FILE* fp, size_t rank, size_t* ncounter, void DumpFunc(const void* a, FILE* fp, size_t type))
 {
+
+    MEOW("PRINTING NODE ON ADDRESS: %p\n", node);
+    MEOW("ITS DATA: %lf\n", *((double*)GetNodeData(node)));
     rank++;
     (*ncounter)++;
     size_t currentNode = *ncounter;
@@ -240,9 +242,13 @@ void  NodePrint(Node_t node, void DumpFunc(void* a, FILE* fp), FILE* fp, size_t 
     {
         fprintf(fp, "\"node%zu\" [\n", *ncounter);
         fprintf(fp, "rank = %zu\n", rank);
-        fprintf(fp, "\"label\" = \"{<parent> parent = %p|<adr> node address =  %p|<f0> DATA = ", *(Node_t*)((char*)node + GetNodeMemShift(node, PARENT_FIELD_CODE)), node);
 
-        DumpFunc(((char*)node + GetNodeMemShift(node, DATA_FIELD_CODE)), fp);
+        fprintf(fp, "\"label\" = \"{<parent> Parent = %p|<adr> Node Address =  %p| <type> Type = %zu|<f0> Data = ", *(Node_t*)((char*)node + GetNodeMemShift(node, PARENT_FIELD_CODE))
+                                                                                                                  , node, *(size_t*)node);
+        DumpFunc(((char*)node + GetNodeMemShift(node, DATA_FIELD_CODE)), fp, *(size_t*)node);
+
+
+
         fprintf(fp, "|{");
         for(size_t i = 0; i < *(size_t*)((char*)node + GetNodeMemShift(node, FERTILITY_FIELD_CODE)); i++)
         {
@@ -263,7 +269,7 @@ void  NodePrint(Node_t node, void DumpFunc(void* a, FILE* fp), FILE* fp, size_t 
             if(GetKidNode(node, i) != NULL)
             {
                 fprintf(fp, "node%zu: <f%zu> -> node%zu[color = \"brown\"];\n", currentNode, i + 2, *ncounter + 1);
-                NodePrint(GetKidNode(node, i), DumpFunc, fp, rank, ncounter);
+                NodePrint(GetKidNode(node, i), fp, rank, ncounter, DumpFunc);
             }
         }    
     }

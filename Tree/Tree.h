@@ -7,12 +7,14 @@
 
 #include "NodeStruct.h"
 
-int  PrintTree      (Node_t root, FILE* dest, void(DumpFunc(void* a, FILE* fp)), const char* filename);
+const u_int64_t ZERO_ADDRESS = 0;
+
+int  PrintTree      (Node_t root, FILE* dest, void(DumpFunc(const void* a, FILE* fp, size_t type)), const char* filename);
 int  GetNodeMemShift(Node_t node, int fieldCode);
 int  NodeDtor       (Node_t node);
 int  BurnTree       (Node_t root);
 
-void NodePrint     (Node_t node, void DumpFunc(void* a, FILE* fp), FILE* fp, size_t rank, size_t* ncounter);
+void  NodePrint(Node_t node, FILE* fp, size_t rank, size_t* ncounter, void DumpFunc(const void* a, FILE* fp, size_t type));
 
 Node_t CreateNode(size_t type, Node_t parent, size_t datasize, void* data, size_t fertility, ...);
 int AddNode(Node_t node, Node_t parent, size_t KidNum);
