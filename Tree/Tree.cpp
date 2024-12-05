@@ -278,7 +278,7 @@ void  NodePrint(Node_t node, FILE* fp, size_t rank, size_t* ncounter, void DumpF
         fprintf(stderr, "Tried printing NULL-pointed node\n");
         return;
     }
-}
+}   
 
 int GetNodeMemShift(Node_t node, int fieldCode)
 {
