@@ -4,8 +4,9 @@
 #include <math.h>
 
 #include "DBTools/DBTools.h"
-#include "DifferentiatorTree.h"
+#include "Differentiator.h"
 #include "doublecmp/doublecmp.h"
+#include "RecursiveDescension.h"
 
 __attribute__((noreturn)) void SyntaxError(int* Index, char Literal, const char* func, const char* file, const int line);
 static void* GetG(const char* ExpressionString, int* Index, tree_t* tree);
@@ -26,7 +27,6 @@ int ReadCrocodile(const char* ExpressionString, tree_t* tree)
         return UNKNOWN_ERROR_DIFF;
     }
     return 0;
-
 }
 
 static void* GetG(const char* ExpressionString, int* Index, tree_t* tree)

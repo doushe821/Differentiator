@@ -1,6 +1,6 @@
-#include "ExpressionSimplifier.h"
+#include "Differentiator.h"
 
-void* SimplifyExpression(tree_t* tree, void* node)
+void* SimplifyExpression(tree_t* tree, void* node, __attribute((unused)) VariableTable_t* VarTable)
 {
     if(tree == NULL || node == NULL)
     {

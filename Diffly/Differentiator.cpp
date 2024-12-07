@@ -1,7 +1,10 @@
+#include "Transitions.h"
 #include "Differentiator.h"
+#include <time.h>
 #include <assert.h>
+#include "VariableTable.h"
 
-void* Differentiate(tree_t* tree, void* node)
+void* Differentiate(tree_t* tree, void* node, __attribute((unused)) FILE* TexOut, VariableTable_t* VarTable)
 {
     assert(tree);
     if(tree == NULL)
@@ -12,23 +15,39 @@ void* Differentiate(tree_t* tree, void* node)
     size_t type = 0;
     memcpy(&type, GetNodeData(node, TYPE_FIELD_CODE, 0), sizeof(type));
 
+    fprintf(TexOut, "\n%s\n", TRANSITIONS[rand()%20]);
+    DumpTreeTex(node, TexOut, VarTable);
+    //fprintf(TexOut, "\\]");
+
     switch(type)
     {
         case CONST_VALUE_TYPE_CODE:
         {
-            return DiffConst(tree, node);
+            void* tptr = DiffConst(tree, node, TexOut, VarTable);
+            //DumpNodeTex(tptr, TexOut);
+            //fprintf(TexOut, "\\]");
+            return tptr;
         }
         case VARIABLE_TYPE_CODE:
         {
-            return DiffVar(tree, node);
+            void* tptr = DiffVar(tree, node, TexOut, VarTable);
+            //DumpNodeTex(tptr, TexOut);
+            //fprintf(TexOut, "\\]");
+            return tptr;
         }
         case OPERATION_TYPE_CODE:
         {
-           return DifferentiateOperation(tree, node);
+            void* tptr = DifferentiateOperation(tree, node, TexOut, VarTable);
+            //DumpNodeTex(tptr, TexOut);
+            //fprintf(TexOut, "\\]");
+            return tptr;
         }
         case FUNCTION_TYPE_CODE:
         {
-            return DifferentiateFunction(tree, node);
+            void* tptr = DifferentiateFunction(tree, node, TexOut, VarTable);
+            //DumpNodeTex(tptr, TexOut);
+            //fprintf(TexOut, "\\]");
+            return tptr;
         }
         default:
         {
@@ -39,23 +58,22 @@ void* Differentiate(tree_t* tree, void* node)
     return NULL;
 }
 
-void* DifferentiateFunction(tree_t* tree, void* node)
+void* DifferentiateFunction(tree_t* tree, void* node, __attribute((unused)) FILE* TexOut, VariableTable_t* VarTable)
 {
-    MEOW(RED_COLOR_ESC_SEQ"%s summoned" DEFAULT_COLOR_ESC_SEQ, __func__);
     int fcode = 0;
     memcpy(&fcode, GetNodeData(node, DATA_FIELD_CODE, 0), sizeof(fcode));
     for(int i = 0; i < NUMBER_OF_FUNCTIONS; i++)
     {
         if(fcode == functions[i].code)
         {
-            return functions[i].FDiffFunc(tree, node);
+            return functions[i].FDiffFunc(tree, node, TexOut, VarTable);
         }
     }
     abort();
     return NULL;
 }
 
-void* FDiffSin(tree_t* tree, void* node)
+void* FDiffSin(tree_t* tree, void* node, __attribute((unused)) FILE* TexOut, VariableTable_t* VarTable)
 {
     void* diffedNode = tree->CloneTree(tree, node);
     memcpy(GetNodeData(diffedNode, DATA_FIELD_CODE, 0), &functions[COS_F].code, sizeof(functions[COS_F].code));
@@ -64,10 +82,10 @@ void* FDiffSin(tree_t* tree, void* node)
     memcpy(&argument, GetNodeData(diffedNode, DESCENDANTS_FIELD_CODE, 0), sizeof(argument));
     
 
-    return MUL_NODE_DIFF(diffedNode, Differentiate(tree, argument));
+    return MUL_NODE_DIFF(diffedNode, Differentiate(tree, argument, TexOut, VarTable));
 }
 
-void* FDiffCos(tree_t* tree, void* node)
+void* FDiffCos(tree_t* tree, void* node, __attribute((unused)) FILE* TexOut, VariableTable_t* VarTable)
 {
     double minus_one_n = -1;
     void* diffedNode = tree->CloneTree(tree, node);
@@ -77,10 +95,10 @@ void* FDiffCos(tree_t* tree, void* node)
     char* argument = NULL;
     memcpy(&argument, GetNodeData(node, DESCENDANTS_FIELD_CODE, 0), sizeof(argument));
 
-    return SIMPLE(MUL_NODE_DIFF(Differentiate(tree, argument), diffedFunc));
+    return SIMPLE(MUL_NODE_DIFF(Differentiate(tree, argument, TexOut, VarTable), diffedFunc));
 }
 
-void* FDiffArcsin(tree_t* tree, void* node)
+void* FDiffArcsin(tree_t* tree, void* node, __attribute((unused)) FILE* TexOut, VariableTable_t* VarTable)
 {
     double one_n = 1;
     double two_n = 2;
@@ -90,10 +108,10 @@ void* FDiffArcsin(tree_t* tree, void* node)
     memcpy(&argument, GetNodeData(diffedNode, DESCENDANTS_FIELD_CODE, 0), sizeof(argument));
     free(diffedNode);
 
-    return MUL_NODE_DIFF(Differentiate(tree, argument), DIV_NODE_DIFF(INIT_C_NODE(&one_n), POW_NODE_DIFF(SUB_NODE_DIFF(INIT_C_NODE(&one_n), POW_NODE_DIFF(argument, INIT_C_NODE(&two_n))), INIT_C_NODE(&half_n))));
+    return MUL_NODE_DIFF(Differentiate(tree, argument, TexOut, VarTable), DIV_NODE_DIFF(INIT_C_NODE(&one_n), POW_NODE_DIFF(SUB_NODE_DIFF(INIT_C_NODE(&one_n), POW_NODE_DIFF(argument, INIT_C_NODE(&two_n))), INIT_C_NODE(&half_n))));
 }
 
-void* FDiffArccos(tree_t* tree, void* node)
+void* FDiffArccos(tree_t* tree, void* node, __attribute((unused)) FILE* TexOut, VariableTable_t* VarTable)
 {
     double minus_one_n = -1;
     double one_n = 1;
@@ -105,11 +123,11 @@ void* FDiffArccos(tree_t* tree, void* node)
     memcpy(&argument, GetNodeData(diffedNode, DESCENDANTS_FIELD_CODE, 0), sizeof(argument));
     free(diffedNode);
 
-    return MUL_NODE_DIFF(Differentiate(tree, argument), DIV_NODE_DIFF(INIT_C_NODE(&minus_one_n), POW_NODE_DIFF(SUB_NODE_DIFF(INIT_C_NODE(&one_n), POW_NODE_DIFF(argument, INIT_C_NODE(&two_n))), INIT_C_NODE(&half_n))));
+    return MUL_NODE_DIFF(Differentiate(tree, argument, TexOut, VarTable), DIV_NODE_DIFF(INIT_C_NODE(&minus_one_n), POW_NODE_DIFF(SUB_NODE_DIFF(INIT_C_NODE(&one_n), POW_NODE_DIFF(argument, INIT_C_NODE(&two_n))), INIT_C_NODE(&half_n))));
 }
 
 
-void* FDiffTg(tree_t* tree, void* node)
+void* FDiffTg(tree_t* tree, void* node, __attribute((unused)) FILE* TexOut, VariableTable_t* VarTable)
 {
     double one_n = 1;
     double two_n = 2;
@@ -119,10 +137,10 @@ void* FDiffTg(tree_t* tree, void* node)
     memcpy(&argument, GetNodeData(diffedNode, DESCENDANTS_FIELD_CODE, 0), sizeof(argument));
     free(diffedNode);  
 
-    return MUL_NODE_DIFF(Differentiate(tree, argument), DIV_NODE_DIFF(INIT_C_NODE(&one_n), POW_NODE_DIFF(COS_NODE_DIFF(argument), INIT_C_NODE(&two_n))));
+    return MUL_NODE_DIFF(Differentiate(tree, argument, TexOut, VarTable), DIV_NODE_DIFF(INIT_C_NODE(&one_n), POW_NODE_DIFF(COS_NODE_DIFF(argument), INIT_C_NODE(&two_n))));
 }
 
-void* FDiffCtg(tree_t* tree, void* node)
+void* FDiffCtg(tree_t* tree, void* node, __attribute((unused)) FILE* TexOut, VariableTable_t* VarTable)
 {
     double minus_one_n = -1;
     double two_n = 2;
@@ -132,10 +150,10 @@ void* FDiffCtg(tree_t* tree, void* node)
     memcpy(&argument, GetNodeData(diffedNode, DESCENDANTS_FIELD_CODE, 0), sizeof(argument));
     free(diffedNode);  
 
-    return SIMPLE(MUL_NODE_DIFF(Differentiate(tree, argument), DIV_NODE_DIFF(INIT_C_NODE(&minus_one_n), POW_NODE_DIFF(SIN_NODE_DIFF(argument), INIT_C_NODE(&two_n)))));
+    return SIMPLE(MUL_NODE_DIFF(Differentiate(tree, argument, TexOut, VarTable), DIV_NODE_DIFF(INIT_C_NODE(&minus_one_n), POW_NODE_DIFF(SIN_NODE_DIFF(argument), INIT_C_NODE(&two_n)))));
 }
 
-void* FDiffArctg(tree_t* tree, void* node)
+void* FDiffArctg(tree_t* tree, void* node, __attribute((unused)) FILE* TexOut, VariableTable_t* VarTable)
 {
     void* diffedNode = tree->CloneTree(tree, node);
     char* argument = NULL;
@@ -145,10 +163,10 @@ void* FDiffArctg(tree_t* tree, void* node)
     double one_n = 1;
     double two_n = 2;
 
-    return SIMPLE(MUL_NODE_DIFF(Differentiate(tree, argument), DIV_NODE_DIFF(INIT_C_NODE(&one_n), SUM_NODE_DIFF(INIT_C_NODE(&one_n), POW_NODE_DIFF(argument, INIT_C_NODE(&two_n))))));
+    return SIMPLE(MUL_NODE_DIFF(Differentiate(tree, argument, TexOut, VarTable), DIV_NODE_DIFF(INIT_C_NODE(&one_n), SUM_NODE_DIFF(INIT_C_NODE(&one_n), POW_NODE_DIFF(argument, INIT_C_NODE(&two_n))))));
 }
 
-void* FDiffArcctg(tree_t* tree, void* node)
+void* FDiffArcctg(tree_t* tree, void* node, __attribute((unused)) FILE* TexOut, VariableTable_t* VarTable)
 {
     void* diffedNode = tree->CloneTree(tree, node);
     char* argument = NULL;
@@ -159,14 +177,14 @@ void* FDiffArcctg(tree_t* tree, void* node)
     double two_n = 2;
     double minus_one_n = -1;
 
-    return SIMPLE(MUL_NODE_DIFF(Differentiate(tree, argument), DIV_NODE_DIFF(INIT_C_NODE(&minus_one_n), SUM_NODE_DIFF(INIT_C_NODE(&one_n), POW_NODE_DIFF(argument, INIT_C_NODE(&two_n))))));
+    return SIMPLE(MUL_NODE_DIFF(Differentiate(tree, argument, TexOut, VarTable), DIV_NODE_DIFF(INIT_C_NODE(&minus_one_n), SUM_NODE_DIFF(INIT_C_NODE(&one_n), POW_NODE_DIFF(argument, INIT_C_NODE(&two_n))))));
 }
 
 
 
 
 
-void* FDiffSh(tree_t* tree, void* node)
+void* FDiffSh(tree_t* tree, void* node, __attribute((unused)) FILE* TexOut, VariableTable_t* VarTable)
 {
     void* diffedNode = tree->CloneTree(tree, node);
     memcpy(GetNodeData(diffedNode, DATA_FIELD_CODE, 0), &functions[COSH_F].code, sizeof(functions[COSH_F].code));
@@ -175,10 +193,10 @@ void* FDiffSh(tree_t* tree, void* node)
     memcpy(&argument, GetNodeData(diffedNode, DESCENDANTS_FIELD_CODE, 0), sizeof(argument));
     
 
-    return SIMPLE(MUL_NODE_DIFF(diffedNode, Differentiate(tree, argument)));
+    return SIMPLE(MUL_NODE_DIFF(diffedNode, Differentiate(tree, argument, TexOut, VarTable)));
 }
 
-void* FDiffCh(tree_t* tree, void* node)
+void* FDiffCh(tree_t* tree, void* node, __attribute((unused)) FILE* TexOut, VariableTable_t* VarTable)
 {
     void* diffedNode = tree->CloneTree(tree, node);
     memcpy(GetNodeData(diffedNode, DATA_FIELD_CODE, 0), &functions[SINH_F].code, sizeof(functions[SINH_F].code));
@@ -186,11 +204,11 @@ void* FDiffCh(tree_t* tree, void* node)
     char* argument = NULL;
     memcpy(&argument, GetNodeData(diffedNode, DESCENDANTS_FIELD_CODE, 0), sizeof(argument));
 
-    return SIMPLE(MUL_NODE_DIFF(diffedNode, Differentiate(tree, argument)));
+    return SIMPLE(MUL_NODE_DIFF(diffedNode, Differentiate(tree, argument, TexOut, VarTable)));
 }
 
 
-void* FDiffArcsh(tree_t* tree, void* node)
+void* FDiffArcsh(tree_t* tree, void* node, __attribute((unused)) FILE* TexOut, VariableTable_t* VarTable)
 {
     double one_n = 1;
     double two_n = 2;
@@ -200,10 +218,10 @@ void* FDiffArcsh(tree_t* tree, void* node)
     memcpy(&argument, GetNodeData(diffedNode, DESCENDANTS_FIELD_CODE, 0), sizeof(argument));
     free(diffedNode);
 
-    return MUL_NODE_DIFF(Differentiate(tree, argument), DIV_NODE_DIFF(INIT_C_NODE(&one_n), POW_NODE_DIFF(SUM_NODE_DIFF(INIT_C_NODE(&one_n), POW_NODE_DIFF(argument, INIT_C_NODE(&two_n))), INIT_C_NODE(&half_n))));
+    return MUL_NODE_DIFF(Differentiate(tree, argument, TexOut, VarTable), DIV_NODE_DIFF(INIT_C_NODE(&one_n), POW_NODE_DIFF(SUM_NODE_DIFF(INIT_C_NODE(&one_n), POW_NODE_DIFF(argument, INIT_C_NODE(&two_n))), INIT_C_NODE(&half_n))));
 }
 
-void* FDiffArcch(tree_t* tree, void* node)
+void* FDiffArcch(tree_t* tree, void* node, __attribute((unused)) FILE* TexOut, VariableTable_t* VarTable)
 {
     double one_n = 1;
     double two_n = 2;
@@ -214,11 +232,11 @@ void* FDiffArcch(tree_t* tree, void* node)
     memcpy(&argument, GetNodeData(diffedNode, DESCENDANTS_FIELD_CODE, 0), sizeof(argument));
     free(diffedNode);
 
-    return MUL_NODE_DIFF(Differentiate(tree, argument), DIV_NODE_DIFF(INIT_C_NODE(&one_n), POW_NODE_DIFF(SUB_NODE_DIFF(POW_NODE_DIFF(argument, INIT_C_NODE(&two_n)), INIT_C_NODE(&one_n)), INIT_C_NODE(&half_n))));
+    return MUL_NODE_DIFF(Differentiate(tree, argument, TexOut, VarTable), DIV_NODE_DIFF(INIT_C_NODE(&one_n), POW_NODE_DIFF(SUB_NODE_DIFF(POW_NODE_DIFF(argument, INIT_C_NODE(&two_n)), INIT_C_NODE(&one_n)), INIT_C_NODE(&half_n))));
 }
 
 
-void* FDiffTh(tree_t* tree, void* node)
+void* FDiffTh(tree_t* tree, void* node, __attribute((unused)) FILE* TexOut, VariableTable_t* VarTable)
 {
     double one_n = 1;
     double two_n = 2;
@@ -228,10 +246,10 @@ void* FDiffTh(tree_t* tree, void* node)
     memcpy(&argument, GetNodeData(diffedNode, DESCENDANTS_FIELD_CODE, 0), sizeof(argument));
     free(diffedNode);  
 
-    return MUL_NODE_DIFF(Differentiate(tree, argument), DIV_NODE_DIFF(INIT_C_NODE(&one_n), POW_NODE_DIFF(COSH_NODE_DIFF(argument), INIT_C_NODE(&two_n))));
+    return MUL_NODE_DIFF(Differentiate(tree, argument, TexOut, VarTable), DIV_NODE_DIFF(INIT_C_NODE(&one_n), POW_NODE_DIFF(COSH_NODE_DIFF(argument), INIT_C_NODE(&two_n))));
 }
 
-void* FDiffCth(tree_t* tree, void* node)
+void* FDiffCth(tree_t* tree, void* node, __attribute((unused)) FILE* TexOut, VariableTable_t* VarTable)
 {
     double minus_one_n = -1;
     double two_n = 2;
@@ -241,10 +259,10 @@ void* FDiffCth(tree_t* tree, void* node)
     memcpy(&argument, GetNodeData(diffedNode, DESCENDANTS_FIELD_CODE, 0), sizeof(argument));
     free(diffedNode);  
 
-    return SIMPLE(MUL_NODE_DIFF(Differentiate(tree, argument), DIV_NODE_DIFF(INIT_C_NODE(&minus_one_n), POW_NODE_DIFF(SINH_NODE_DIFF(argument), INIT_C_NODE(&two_n)))));
+    return SIMPLE(MUL_NODE_DIFF(Differentiate(tree, argument, TexOut, VarTable), DIV_NODE_DIFF(INIT_C_NODE(&minus_one_n), POW_NODE_DIFF(SINH_NODE_DIFF(argument), INIT_C_NODE(&two_n)))));
 }
 
-void* FDiffArcth(tree_t* tree, void* node)
+void* FDiffArcth(tree_t* tree, void* node, __attribute((unused)) FILE* TexOut, VariableTable_t* VarTable)
 {
     void* diffedNode = tree->CloneTree(tree, node);
     char* argument = NULL;
@@ -254,10 +272,10 @@ void* FDiffArcth(tree_t* tree, void* node)
     double one_n = 1;
     double two_n = 2;
 
-    return S_MUL_NODE_DIFF(SIMPLE(Differentiate(tree, argument)), S_DIV_NODE_DIFF(INIT_C_NODE(&one_n), S_SUM_NODE_DIFF(INIT_C_NODE(&one_n), S_POW_NODE_DIFF(argument, INIT_C_NODE(&two_n)))));
+    return S_MUL_NODE_DIFF(SIMPLE(Differentiate(tree, argument, TexOut, VarTable)), S_DIV_NODE_DIFF(INIT_C_NODE(&one_n), S_SUM_NODE_DIFF(INIT_C_NODE(&one_n), S_POW_NODE_DIFF(argument, INIT_C_NODE(&two_n)))));
 }
 
-void* FDiffArccth(tree_t* tree, void* node)
+void* FDiffArccth(tree_t* tree, void* node, __attribute((unused)) FILE* TexOut, VariableTable_t* VarTable)
 {
     void* diffedNode = tree->CloneTree(tree, node);
     char* argument = NULL;
@@ -267,40 +285,40 @@ void* FDiffArccth(tree_t* tree, void* node)
     double one_n = 1;
     double two_n = 2;
 
-    return S_MUL_NODE_DIFF(SIMPLE(Differentiate(tree, argument)), S_DIV_NODE_DIFF(INIT_C_NODE(&one_n), S_SUM_NODE_DIFF(INIT_C_NODE(&one_n), S_POW_NODE_DIFF(argument, INIT_C_NODE(&two_n)))));
+    return S_MUL_NODE_DIFF(SIMPLE(Differentiate(tree, argument, TexOut, VarTable)), S_DIV_NODE_DIFF(INIT_C_NODE(&one_n), S_SUM_NODE_DIFF(INIT_C_NODE(&one_n), S_POW_NODE_DIFF(argument, INIT_C_NODE(&two_n)))));
 }
 
 
 
-void* FDiffLn(tree_t* tree, void* node)
+void* FDiffLn(tree_t* tree, void* node, __attribute((unused)) FILE* TexOut, VariableTable_t* VarTable)
 {
     void* diffedNode = tree->CloneTree(tree, node);
     char* argument = NULL;
     memcpy(&argument, GetNodeData(diffedNode, DESCENDANTS_FIELD_CODE, 0), sizeof(argument));
     free(diffedNode);  
 
-    return DIV_NODE_DIFF(Differentiate(tree, argument), argument);
+    return DIV_NODE_DIFF(Differentiate(tree, argument, TexOut, VarTable), argument);
 }
 
 
 
-void* DifferentiateOperation(tree_t* tree, void* node)
+void* DifferentiateOperation(tree_t* tree, void* node, __attribute((unused)) FILE* TexOut, VariableTable_t* VarTable)
 {
-    MEOW(RED_COLOR_ESC_SEQ"%s summoned" DEFAULT_COLOR_ESC_SEQ, __func__);
+    
     int opcode = 0;
     memcpy(&opcode, GetNodeData(node, DATA_FIELD_CODE, 0), sizeof(opcode));
     for(int i = 0; i< NUMBER_OF_OPERATIONS; i++)
     {
         if(opcode == operations[i].code)
         {
-            return operations[i].DiffFunc(tree, node);
+            return operations[i].DiffFunc(tree, node, TexOut, VarTable);
         }
     }
     MEOW(GREEN_COLOR_ESC_SEQ"I'm just a chill guy %s\n" DEFAULT_COLOR_ESC_SEQ, __TIME__);
     return NULL;
 }
 
-void* DiffPow(tree_t* tree, void* node)
+void* DiffPow(tree_t* tree, void* node, __attribute((unused)) FILE* TexOut, VariableTable_t* VarTable)
 {
     void* diffedNode = tree->CloneTree(tree, node);
     char* desc1 = {};
@@ -324,13 +342,13 @@ void* DiffPow(tree_t* tree, void* node)
 
 
             memcpy(GetNodeData(desc2, DATA_FIELD_CODE, 0), &newVal, sizeof(newVal));
-            return S_MUL_NODE_DIFF(INIT_C_NODE(&value2), S_MUL_NODE_DIFF(SIMPLE(Differentiate(tree, desc1)), SIMPLE(diffedNode)));
+            return S_MUL_NODE_DIFF(INIT_C_NODE(&value2), S_MUL_NODE_DIFF(SIMPLE(Differentiate(tree, desc1, TexOut, VarTable)), SIMPLE(diffedNode)));
 
             /*return SimplifyExpression(tree, 
             tree->InitNode(tree, NULL, OPERATION_TYPE_CODE, sizeof(operations[MUL_DIFF].code), &operations[MUL_DIFF].code, 2,
             tree->InitNode(tree, NULL, CONST_VALUE_TYPE_CODE, sizeof(value2), &value2, 0), 
             SIMPLE(tree->InitNode(tree, NULL, OPERATION_TYPE_CODE, sizeof(operations[MUL_DIFF].code), &operations[MUL_DIFF].code, 2, 
-            SimplifyExpression(tree, Differentiate(tree, desc1)), diffedNode))));*/
+            3fyExpression(tree, Differentiate(tree, desc1)), diffedNode))));*/
         }
         else
         {
@@ -343,24 +361,24 @@ void* DiffPow(tree_t* tree, void* node)
         {
             void* diffedDesc1 = tree->CloneTree(tree, desc1);
             //void* diffedDesc2 = tree->CloneTree(tree, desc2);
-            return S_MUL_NODE_DIFF(SIMPLE(Differentiate(tree, desc2)), S_MUL_NODE_DIFF(diffedNode, S_LN_NODE_DIFF(diffedDesc1)));
+            return S_MUL_NODE_DIFF(SIMPLE(Differentiate(tree, desc2, TexOut, VarTable)), S_MUL_NODE_DIFF(diffedNode, S_LN_NODE_DIFF(diffedDesc1)));
         }
     }
     return 0;
 }
 
-void* DiffMul(tree_t* tree, void* node)
+void* DiffMul(tree_t* tree, void* node, __attribute((unused)) FILE* TexOut, VariableTable_t* VarTable)
 {
-    MEOW(RED_COLOR_ESC_SEQ"%s summoned" DEFAULT_COLOR_ESC_SEQ, __func__);
+    
     char* desc1 = {};
     memcpy(&desc1, GetNodeData(node, DESCENDANTS_FIELD_CODE, 0), sizeof(desc1));
     void* desc1Copy = tree->CloneTree(tree, desc1);
-    void* node1 = SIMPLE(Differentiate(tree, desc1));
+    void* node1 = SIMPLE(Differentiate(tree, desc1, TexOut, VarTable));
 
     char* desc2 = {};
     memcpy(&desc2, GetNodeData(node, DESCENDANTS_FIELD_CODE, 1), sizeof(desc2));
     void* desc2Copy = tree->CloneTree(tree, desc2);
-    void* node2 = SIMPLE(Differentiate(tree, desc2));
+    void* node2 = SIMPLE(Differentiate(tree, desc2, TexOut, VarTable));
 
     void* term1 = SIMPLE(MUL_NODE_DIFF(node1, desc2Copy));
 
@@ -369,18 +387,18 @@ void* DiffMul(tree_t* tree, void* node)
     return SIMPLE(SUM_NODE_DIFF(term1, term2));
 }
 
-void* DiffSum(tree_t* tree, void* node)
+void* DiffSum(tree_t* tree, void* node, __attribute((unused)) FILE* TexOut, VariableTable_t* VarTable)
 {
     int opCode = 0;
     memcpy(&opCode, GetNodeData(node, DATA_FIELD_CODE, 0), sizeof(opCode));
 
     char* desc1 = {};
     memcpy(&desc1, GetNodeData(node, DESCENDANTS_FIELD_CODE, 0), sizeof(desc1));
-    void* node1 = SIMPLE(Differentiate(tree, desc1));
-                                            // complex diff
+    void* node1 = SIMPLE(Differentiate(tree, desc1, TexOut, VarTable));
+                                        
     char* desc2 = {};
     memcpy(&desc2, GetNodeData(node, DESCENDANTS_FIELD_CODE, 1), sizeof(desc2));
-    void* node2 = SIMPLE(Differentiate(tree, desc2));
+    void* node2 = SIMPLE(Differentiate(tree, desc2, TexOut, VarTable));
 
     if(opCode == SUM_DIFF)
     {
@@ -392,18 +410,18 @@ void* DiffSum(tree_t* tree, void* node)
     }
 }
 
-void* DiffDiv(tree_t* tree, void* node)
+void* DiffDiv(tree_t* tree, void* node, __attribute((unused)) FILE* TexOut, VariableTable_t* VarTable)
 {
     char* desc1 = {};
     memcpy(&desc1, GetNodeData(node, DESCENDANTS_FIELD_CODE, 0), sizeof(desc1));
     void* desc1Copy = tree->CloneTree(tree, desc1);
-    void* node1 = SIMPLE(Differentiate(tree, desc1));
+    void* node1 = SIMPLE(Differentiate(tree, desc1, TexOut, VarTable));
                             
     char* desc2 = {};
     memcpy(&desc2, GetNodeData(node, DESCENDANTS_FIELD_CODE, 1), sizeof(desc2));
     void* desc2Copy = tree->CloneTree(tree, desc2);
     void* desc2SecondCopy = tree->CloneTree(tree, desc2);
-    void* node2 = SIMPLE(Differentiate(tree, desc2));
+    void* node2 = SIMPLE(Differentiate(tree, desc2, TexOut, VarTable));
 
     void* term1 = SIMPLE(MUL_NODE_DIFF(node1, desc2Copy));
 
@@ -417,23 +435,16 @@ void* DiffDiv(tree_t* tree, void* node)
     return SIMPLE(DIV_NODE_DIFF(sub, dividend));
 }
 
-void* DiffVar(tree_t* tree, __attribute((unused))void* node) 
+void* DiffVar(tree_t* tree, __attribute((unused))void* node, __attribute((unused)) FILE* TexOut, __attribute((unused)) VariableTable_t* VarTable) 
 {
-    MEOW(RED_COLOR_ESC_SEQ"%s summoned" DEFAULT_COLOR_ESC_SEQ, __func__);
     double value = 1;
 
     return tree->InitNode(tree, NULL, CONST_VALUE_TYPE_CODE, sizeof(value), &value, 0);
 }
 
-void* DiffPowF(__attribute((unused))tree_t* tree, __attribute((unused))void* node)
+void* DiffConst(tree_t* tree, __attribute((unused))void* node, __attribute((unused)) FILE* TexOut, __attribute((unused)) VariableTable_t* VarTable)
 {
-
-    return NULL;
-}
-
-void* DiffConst(tree_t* tree, __attribute((unused))void* node)
-{
-    MEOW(RED_COLOR_ESC_SEQ"%s summoned" DEFAULT_COLOR_ESC_SEQ, __func__);
+    
     double value = 0;
     return tree->InitNode(tree, NULL, CONST_VALUE_TYPE_CODE, sizeof(value), &value, 0);
 }

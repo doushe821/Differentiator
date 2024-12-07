@@ -1,4 +1,7 @@
 #include "DifferentiatorTree.h"
+#include "Differentiator.h"
+#include <string.h>
+#include <stdlib.h>
 
 static void* CloneNodeDiff(const void* tree, void* node);
 
@@ -62,8 +65,6 @@ void* NewNodeDiff(const void* tree, const void* parent, const size_t type, const
         }
     }
 
-    MEOW(GREEN_COLOR_ESC_SEQ "\n\nCreated node on address %p\n", NewNode);
-    MEOW("Node data:\nTree: %p\nParent: %p\nType: %zu\nData size: %zu\nData:\nDegree: %zu\n\n" DEFAULT_COLOR_ESC_SEQ, tree, parent, type, datasize, degree);
     return NewNode;
 }
 
@@ -248,7 +249,6 @@ int FindFunction(const char* funcName)
             return functions[i].code;
         }
     }
-    MEOW("No chill %d\n", __LINE__);
     return -1;
 }
 
@@ -261,6 +261,5 @@ int FindOperation(const int symbol)
             return operations[i].code;
         }
     }
-    MEOW("No chill %d\n", __LINE__);
     return -1;
 }

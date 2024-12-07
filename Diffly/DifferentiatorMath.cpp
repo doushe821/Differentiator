@@ -3,7 +3,9 @@
 
 #include "DifferentiatorMath.h"
 
+
 double cot(double a)
+
 {
     return 1/tan(a);
 }
