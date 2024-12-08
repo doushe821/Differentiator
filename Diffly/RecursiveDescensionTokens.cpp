@@ -93,15 +93,17 @@ static void* GetT(const Token_t* const Tokens, int* Index, tree_t* tree , Variab
     void* node2 = NULL;
     void* root = node1;
     int op = 0;
-    double value = 0;
     while(Tokens[*Index].Data.Decimal == '*' || Tokens[*Index].Data.Decimal == '/')
     {
+        MEOW("%d\n\n\n\n\n\n\n", __LINE__);
         op = Tokens[*Index].Data.Decimal;
         (*Index)++;
         node2 = GetP(Tokens, Index, tree, VarTable);
+        int opcode = FindOperation(op);
+        root = NewNodeDiff(tree, NULL, OPERATION_TYPE_CODE, sizeof(int), &opcode, 2, root, node2);
         
 
-        size_t type1 = 0;
+        /*size_t type1 = 0;
         size_t type2 = 0;
         memcpy(&type1, GetNodeData(node1, TYPE_FIELD_CODE, 0), sizeof(type1));
         memcpy(&type2, GetNodeData(node2, TYPE_FIELD_CODE, 0), sizeof(type2));
@@ -163,7 +165,7 @@ static void* GetT(const Token_t* const Tokens, int* Index, tree_t* tree , Variab
         {
             int opcode = FindOperation(op);
             root = NewNodeDiff(tree, NULL, OPERATION_TYPE_CODE, sizeof(int), &opcode, 2, root, node2);
-        }
+        }*/
     }
     return root;
 } 
@@ -285,7 +287,7 @@ static void* GetF(const Token_t* const Tokens, int* Index, tree_t* tree , Variab
             SyntaxError(Index, Tokens[*Index], __func__, __FILE__, __LINE__, VarTable);
         }
         (*Index)++;
-        retNode = tree->InitNode(tree, NULL, FUNCTION_TYPE_CODE, sizeof(int), &fCode, 1, GetN(Tokens, Index, tree, VarTable));
+        retNode = tree->InitNode(tree, NULL, FUNCTION_TYPE_CODE, sizeof(int), &fCode, 1, GetE(Tokens, Index, tree, VarTable));
         if(Tokens[*Index].Data.Decimal != ')')
         {
             SyntaxError(Index, Tokens[*Index], __func__, __FILE__, __LINE__, VarTable);   

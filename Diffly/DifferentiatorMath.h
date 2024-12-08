@@ -13,4 +13,6 @@ double CalcMul(double a, double b);
 double CalcDiv(double a, double b);
 double CalcPow(double a, double b);
 
+size_t factorialD(size_t a);
+
 #endif

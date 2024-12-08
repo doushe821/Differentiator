@@ -9,7 +9,7 @@
 
 typedef void* (*InitFunc)(const void*, const void*, const size_t, const size_t, const void*, const size_t, ...);
 typedef void* (*CloneFunc)(const void*, void*);
-typedef int   (*DumpFunc)(void*, FILE*);
+typedef int   (*DumpFunc)(void*, FILE*, void*);
 
 enum fieldCodes
 {
@@ -42,7 +42,7 @@ struct BaseNode
 };
 
 size_t CalculateByteShift(const void* node, const int fieldcode);
-int    PrintTreeGraphViz(FILE* out, const tree_t tree, const char* filename);
+int    PrintTreeGraphViz(FILE* out, const tree_t tree, const char* filename, void* UserFunc);
 int    BurnBranch(void* node);
 int    BurnTree(tree_t* tree);
 

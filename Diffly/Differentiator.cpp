@@ -15,37 +15,41 @@ void* Differentiate(tree_t* tree, void* node, __attribute((unused)) FILE* TexOut
     size_t type = 0;
     memcpy(&type, GetNodeData(node, TYPE_FIELD_CODE, 0), sizeof(type));
 
-    fprintf(TexOut, "\n%s\n", TRANSITIONS[rand()%20]);
-    DumpTreeTex(node, TexOut, VarTable);
-    //fprintf(TexOut, "\\]");
+    if(TexOut != NULL)
+    {
+        fprintf(TexOut, "\n%s\n", TRANSITIONS[rand()%20]);
+        DumpTreeTex(node, TexOut, VarTable);
+    }
+
+
 
     switch(type)
     {
         case CONST_VALUE_TYPE_CODE:
         {
-            void* tptr = DiffConst(tree, node, TexOut, VarTable);
-            //DumpNodeTex(tptr, TexOut);
+            void* tptr = SIMPLE(DiffConst(tree, node, TexOut, VarTable));
+            //DumpTreeTex(tptr, TexOut, VarTable);
             //fprintf(TexOut, "\\]");
             return tptr;
         }
         case VARIABLE_TYPE_CODE:
         {
-            void* tptr = DiffVar(tree, node, TexOut, VarTable);
-            //DumpNodeTex(tptr, TexOut);
+            void* tptr = SIMPLE(DiffVar(tree, node, TexOut, VarTable));
+            //DumpTreeTex(tptr, TexOut, VarTable);
             //fprintf(TexOut, "\\]");
             return tptr;
         }
         case OPERATION_TYPE_CODE:
         {
-            void* tptr = DifferentiateOperation(tree, node, TexOut, VarTable);
-            //DumpNodeTex(tptr, TexOut);
+            void* tptr = SIMPLE(DifferentiateOperation(tree, node, TexOut, VarTable));
+            //DumpTreeTex(tptr, TexOut, VarTable);
             //fprintf(TexOut, "\\]");
             return tptr;
         }
         case FUNCTION_TYPE_CODE:
         {
-            void* tptr = DifferentiateFunction(tree, node, TexOut, VarTable);
-            //DumpNodeTex(tptr, TexOut);
+            void* tptr = SIMPLE(DifferentiateFunction(tree, node, TexOut, VarTable));
+            //DumpTreeTex(tptr, TexOut, VarTable);
             //fprintf(TexOut, "\\]");
             return tptr;
         }
@@ -66,7 +70,7 @@ void* DifferentiateFunction(tree_t* tree, void* node, __attribute((unused)) FILE
     {
         if(fcode == functions[i].code)
         {
-            return functions[i].FDiffFunc(tree, node, TexOut, VarTable);
+            return SIMPLE(functions[i].FDiffFunc(tree, node, TexOut, VarTable));
         }
     }
     abort();
@@ -82,7 +86,7 @@ void* FDiffSin(tree_t* tree, void* node, __attribute((unused)) FILE* TexOut, Var
     memcpy(&argument, GetNodeData(diffedNode, DESCENDANTS_FIELD_CODE, 0), sizeof(argument));
     
 
-    return MUL_NODE_DIFF(diffedNode, Differentiate(tree, argument, TexOut, VarTable));
+    return S_MUL_NODE_DIFF(SIMPLE(diffedNode), SIMPLE(Differentiate(tree, argument, TexOut, VarTable)));
 }
 
 void* FDiffCos(tree_t* tree, void* node, __attribute((unused)) FILE* TexOut, VariableTable_t* VarTable)
@@ -90,12 +94,12 @@ void* FDiffCos(tree_t* tree, void* node, __attribute((unused)) FILE* TexOut, Var
     double minus_one_n = -1;
     void* diffedNode = tree->CloneTree(tree, node);
     memcpy(GetNodeData(diffedNode, DATA_FIELD_CODE, 0), &functions[SIN_F].code, sizeof(functions[SIN_F].code));
-    void* diffedFunc = MUL_NODE_DIFF(INIT_C_NODE(&minus_one_n), diffedNode);
+    void* diffedFunc = S_MUL_NODE_DIFF(INIT_C_NODE(&minus_one_n), SIMPLE(diffedNode));
 
     char* argument = NULL;
     memcpy(&argument, GetNodeData(node, DESCENDANTS_FIELD_CODE, 0), sizeof(argument));
 
-    return SIMPLE(MUL_NODE_DIFF(Differentiate(tree, argument, TexOut, VarTable), diffedFunc));
+    return S_MUL_NODE_DIFF(SIMPLE(Differentiate(tree, SIMPLE(argument), TexOut, VarTable)), diffedFunc);
 }
 
 void* FDiffArcsin(tree_t* tree, void* node, __attribute((unused)) FILE* TexOut, VariableTable_t* VarTable)
@@ -361,7 +365,7 @@ void* DiffPow(tree_t* tree, void* node, __attribute((unused)) FILE* TexOut, Vari
         {
             void* diffedDesc1 = tree->CloneTree(tree, desc1);
             //void* diffedDesc2 = tree->CloneTree(tree, desc2);
-            return S_MUL_NODE_DIFF(SIMPLE(Differentiate(tree, desc2, TexOut, VarTable)), S_MUL_NODE_DIFF(diffedNode, S_LN_NODE_DIFF(diffedDesc1)));
+            return S_MUL_NODE_DIFF(SIMPLE(Differentiate(tree, desc2, TexOut, VarTable)), S_MUL_NODE_DIFF(SIMPLE(diffedNode), S_LN_NODE_DIFF(diffedDesc1)));
         }
     }
     return 0;
@@ -372,19 +376,19 @@ void* DiffMul(tree_t* tree, void* node, __attribute((unused)) FILE* TexOut, Vari
     
     char* desc1 = {};
     memcpy(&desc1, GetNodeData(node, DESCENDANTS_FIELD_CODE, 0), sizeof(desc1));
-    void* desc1Copy = tree->CloneTree(tree, desc1);
+    void* desc1Copy = SIMPLE(tree->CloneTree(tree, desc1));
     void* node1 = SIMPLE(Differentiate(tree, desc1, TexOut, VarTable));
 
     char* desc2 = {};
     memcpy(&desc2, GetNodeData(node, DESCENDANTS_FIELD_CODE, 1), sizeof(desc2));
-    void* desc2Copy = tree->CloneTree(tree, desc2);
+    void* desc2Copy = SIMPLE(tree->CloneTree(tree, desc2));
     void* node2 = SIMPLE(Differentiate(tree, desc2, TexOut, VarTable));
 
-    void* term1 = SIMPLE(MUL_NODE_DIFF(node1, desc2Copy));
+    void* term1 = S_MUL_NODE_DIFF(node1, desc2Copy);
 
-    void* term2 = SIMPLE(MUL_NODE_DIFF(node2, desc1Copy));
-
-    return SIMPLE(SUM_NODE_DIFF(term1, term2));
+    void* term2 = S_MUL_NODE_DIFF(node2, desc1Copy);
+    
+    return SimplifyExpression(tree, SUM_NODE_DIFF(term1, term2), VarTable);
 }
 
 void* DiffSum(tree_t* tree, void* node, __attribute((unused)) FILE* TexOut, VariableTable_t* VarTable)
@@ -414,25 +418,25 @@ void* DiffDiv(tree_t* tree, void* node, __attribute((unused)) FILE* TexOut, Vari
 {
     char* desc1 = {};
     memcpy(&desc1, GetNodeData(node, DESCENDANTS_FIELD_CODE, 0), sizeof(desc1));
-    void* desc1Copy = tree->CloneTree(tree, desc1);
-    void* node1 = SIMPLE(Differentiate(tree, desc1, TexOut, VarTable));
+    void* desc1Copy = SIMPLE(tree->CloneTree(tree, desc1));
+    void* node1 = SIMPLE(Differentiate(tree, desc1Copy, TexOut, VarTable));
                             
     char* desc2 = {};
     memcpy(&desc2, GetNodeData(node, DESCENDANTS_FIELD_CODE, 1), sizeof(desc2));
-    void* desc2Copy = tree->CloneTree(tree, desc2);
-    void* desc2SecondCopy = tree->CloneTree(tree, desc2);
-    void* node2 = SIMPLE(Differentiate(tree, desc2, TexOut, VarTable));
+    void* desc2Copy = SIMPLE(tree->CloneTree(tree, desc2));
+    void* desc2SecondCopy = SIMPLE(tree->CloneTree(tree, desc2));
+    void* node2 = SIMPLE(Differentiate(tree, desc2Copy, TexOut, VarTable));
 
-    void* term1 = SIMPLE(MUL_NODE_DIFF(node1, desc2Copy));
+    void* term1 = S_MUL_NODE_DIFF(node1, desc2Copy);
 
-    void* term2 = SIMPLE(MUL_NODE_DIFF(node2, desc1Copy));
+    void* term2 = S_MUL_NODE_DIFF(node2, desc1Copy);
 
     double two_n = 2;
-    void* dividend = SIMPLE(POW_NODE_DIFF(desc2SecondCopy, INIT_C_NODE(&two_n)));
+    void* dividend = S_POW_NODE_DIFF(desc2SecondCopy, INIT_C_NODE(&two_n));
 
-    void* sub = SIMPLE(SUB_NODE_DIFF(term1, term2));
+    void* sub = S_SUB_NODE_DIFF(term1, term2);
 
-    return SIMPLE(DIV_NODE_DIFF(sub, dividend));
+    return S_DIV_NODE_DIFF(sub, dividend);
 }
 
 void* DiffVar(tree_t* tree, __attribute((unused))void* node, __attribute((unused)) FILE* TexOut, __attribute((unused)) VariableTable_t* VarTable) 
@@ -449,13 +453,13 @@ void* DiffConst(tree_t* tree, __attribute((unused))void* node, __attribute((unus
     return tree->InitNode(tree, NULL, CONST_VALUE_TYPE_CODE, sizeof(value), &value, 0);
 }
 
-void ErrorParser(int code, int line)
+void ErrorParser(const int code, const int line, const char* file)
 {
     switch(code)
     {
         case FILE_OPENING_ERROR_DIFF:
         {
-            fprintf(stderr, "Can't open file: %d\n", line);
+            fprintf(stderr, "Can't open file: %s:%d\n", file, line);
             break;
         }
         case 0:
@@ -464,12 +468,12 @@ void ErrorParser(int code, int line)
         }
         case NULL_POINTER_DIFF:
         {
-            fprintf(stderr, "Something that shouldn't return NULL returned it on line %d\n", line);
+            fprintf(stderr, "Something that shouldn't return NULL returned it on line %s:%d\n", file, line);
             abort();
         }
         default:
         {
-            fprintf(stderr, "Unknown error: %d\n", line);
+            fprintf(stderr, "Unknown error: %s:%d\n", file, line);
             break;
         }
     }

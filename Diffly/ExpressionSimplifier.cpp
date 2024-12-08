@@ -10,7 +10,6 @@ void* SimplifyExpression(tree_t* tree, void* node, __attribute((unused)) Variabl
     size_t type = 0;
     memcpy(&type, GetNodeData(node, TYPE_FIELD_CODE, 0), sizeof(type));
 
-    MEOW(RED_COLOR_ESC_SEQ "type = %zu\n" DEFAULT_COLOR_ESC_SEQ, type);
     if(type == CONST_VALUE_TYPE_CODE)
     {
         return node;
@@ -73,9 +72,8 @@ void* SimplifyExpression(tree_t* tree, void* node, __attribute((unused)) Variabl
             {
                 if(opcode == MUL_DIFF || opcode == POW_DIFF || opcode == DIV_DIFF)
                 {
-                    BurnBranch(descendant2);
-                    free(node);
-                    return descendant1;
+                    BurnBranch(node);
+                    return INIT_C_NODE(&value1);
                 }
                 
                 if(opcode == SUM_DIFF)
@@ -83,6 +81,14 @@ void* SimplifyExpression(tree_t* tree, void* node, __attribute((unused)) Variabl
                     free(descendant1);
                     free(node);
                     return descendant2;
+                }
+                
+                if(opcode == SUB_DIFF)
+                {
+                    free(descendant1);
+                    free(node);
+                    double val = -1;
+                    return MUL_NODE_DIFF(INIT_C_NODE(&val), descendant2);
                 }
             }
             
@@ -109,10 +115,10 @@ void* SimplifyExpression(tree_t* tree, void* node, __attribute((unused)) Variabl
             memcpy(&value2, GetNodeData(descendant2, DATA_FIELD_CODE, 0), sizeof(value2));
             if(type1 == CONST_VALUE_TYPE_CODE)
             {
+                MEOW("BOTH ARE CONST %d\n", __LINE__);
                 double value1 = 0;
                 memcpy(&value1, GetNodeData(descendant1, DATA_FIELD_CODE, 0), sizeof(value1));
-                free(descendant1);
-                free(descendant2);
+                BurnBranch(node);
                 double value = operations[opcode].CalcFunc(value1, value2);
                 return INIT_C_NODE(&value);
             }
@@ -141,6 +147,7 @@ void* SimplifyExpression(tree_t* tree, void* node, __attribute((unused)) Variabl
                 if(opcode == SUM_DIFF)
                 {
                     free(descendant2);
+                    free(node);
                     return descendant1;
                 }
             }
@@ -158,7 +165,6 @@ void* SimplifyExpression(tree_t* tree, void* node, __attribute((unused)) Variabl
                 {
                     free(node);
                     free(descendant2);
-                    
                     return descendant1;
                 }
             }

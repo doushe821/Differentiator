@@ -1,4 +1,5 @@
 #include "DifferentiatorTree.h"
+#include "VariableTable.h"
 #include "Differentiator.h"
 #include <string.h>
 #include <stdlib.h>
@@ -12,8 +13,8 @@ void* NewNodeDiff(const void* tree, const void* parent, const size_t type, const
         return NULL;
     }
 
-        void* NewNode = calloc(1, DIFFERENTIATOR_BASE_NODE_SIZE + (size_t)degree * sizeof(void*) + datasize);
-    
+    void* NewNode = calloc(1, DIFFERENTIATOR_BASE_NODE_SIZE + (size_t)degree * sizeof(void*) + datasize);
+
     size_t ByteIndex = 0;
 
     memcpy(NewNode, tree, sizeof(void*));
@@ -83,7 +84,7 @@ void* GetNodeData(void* node, const int FieldCode, const size_t DescendantNumber
 }
 
 
-int NodeDump(void* node, FILE* out)
+int NodeDump(void* node, FILE* out, void* VarTable)
 {
     if(node == NULL)
     {
@@ -139,8 +140,10 @@ int NodeDump(void* node, FILE* out)
         {
             int value = 0;
             memcpy(&value, GetNodeData(node, DATA_FIELD_CODE, 0), sizeof(value));
-            fprintf(out, "%c", value);
+            MEOW("\t\t\t\t\tVariable code = %d\n", value);
+            fprintf(out, "%s", *(char**)((char*)VarTable + (size_t)value*sizeof(Variable_t)));
             fprintf(out, "}\"\ncolor=\"black\"\nfillcolor=\"grey\"\n");
+            MEOW("\t\t\t\t\t\tVariable name = %s\n", *(char**)((char*)VarTable + (size_t)value*sizeof(Variable_t)));
             break;
         }
         case FUNCTION_TYPE_CODE:
@@ -232,7 +235,7 @@ static void* CloneNodeDiff(const void* tree, void* node)
         {
             return NULL;
         }
-        MEOW("%p\n", DescAddr);
+        //MEOW("%p\n", DescAddr);
         char* CopiedDAddr = (char*)CloneNodeDiff(tree, DescAddr);
         memcpy(GetNodeData(clonedNode, DESCENDANTS_FIELD_CODE, i), &CopiedDAddr, sizeof(void*));
     }

@@ -1,5 +1,6 @@
 #include <stdio.h>
 
+
 #include "TexDumper.h"
 #include "Differentiator.h"
 
@@ -93,9 +94,11 @@ int DumpSumTex(void* node, FILE* out, VariableTable_t* VarTable)
     char* desc2 = NULL;
     GET_NODE_DESCENDANT(desc2, node, 1);
 
+    fprintf(out, "(");
     DumpNodeTex(desc1, out, VarTable);
     fprintf(out, "%c", operations[SUM_DIFF].symbol);
     DumpNodeTex(desc2, out, VarTable);
+    fprintf(out, ")");
     
     return 0;
 }
@@ -107,9 +110,11 @@ int DumpSubTex(void* node, FILE* out, VariableTable_t* VarTable)
     char* desc2 = NULL;
     GET_NODE_DESCENDANT(desc2, node, 1);
 
+    fprintf(out, "(");
     DumpNodeTex(desc1, out, VarTable);
     fprintf(out, "%c", operations[SUB_DIFF].symbol);
     DumpNodeTex(desc2, out, VarTable);
+    fprintf(out, ")");
     
     return 0;
 }
@@ -121,9 +126,11 @@ int DumpMulTex(void* node, FILE* out, VariableTable_t* VarTable)
     char* desc2 = NULL;
     GET_NODE_DESCENDANT(desc2, node, 1);
 
+    fprintf(out, "(");
     DumpNodeTex(desc1, out, VarTable);
     fprintf(out, "%c", operations[MUL_DIFF].symbol);
     DumpNodeTex(desc2, out, VarTable);
+    fprintf(out, ")");
     
     return 0;
 }

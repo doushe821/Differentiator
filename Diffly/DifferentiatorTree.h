@@ -9,7 +9,7 @@ const size_t DIFFERENTIATOR_BASE_NODE_SIZE = 40;
 
 void* NewNodeDiff(const void* tree, const void* parent, const size_t type, const size_t datasize, const void* value, const size_t degree, ...);
 
-int NodeDump(void* node, FILE* out);
+int NodeDump(void* node, FILE* out, void* VarTable);
 
 void* CloneTreeDiff(const void* tree, void* root);
 

@@ -9,6 +9,7 @@ enum DifferentiatorErrors
     ALLOCATION_FAILURE_DIFF = -4,
     UNKNOWN_ERROR_DIFF = -57,
     FILE_READING_ERROR_DIFF = -6,
+    CALCULATION_FAILURE = -7,
 };
 
 

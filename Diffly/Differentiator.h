@@ -19,7 +19,7 @@
 #include "DBTools/DBTools.h"
 #endif
 
-void ErrorParser(int code, int line);
+void ErrorParser(const int code, const int line, const char* file);
 
 void* Differentiate(tree_t* tree, void* node, FILE* TexOut, VariableTable_t* VarTable);
 
@@ -75,7 +75,7 @@ struct operation_t
     void* (*DiffFunc)(tree_t* tree, void* node, FILE* TexOut, VariableTable_t* VarTable);
     double (*CalcFunc)(double a, double b);
     int (*TexDumpFunc)(void* node, FILE* out, VariableTable_t* VarTable);
-};
+};  
 enum DIFFERENTIATOR_OPERATIONS
 {
     SUM_DIFF = 0,

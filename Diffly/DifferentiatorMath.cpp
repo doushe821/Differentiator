@@ -3,9 +3,17 @@
 
 #include "DifferentiatorMath.h"
 
+size_t factorialD(size_t a)
+{
+    if(a == 1 || a == 0)
+    {
+        return 1;
+    }
+
+    return a*factorialD(a-1);
+}
 
 double cot(double a)
-
 {
     return 1/tan(a);
 }

@@ -7,7 +7,7 @@
 
 #define DESCENDANT_NODE ((const char*)node + CalculateByteShift(node, DESCENDANTS_FIELD_CODE))
 
-static int PrintRecursion(FILE* out, void* node, size_t* NodeCounter, size_t rank, int DumpFunc(void* a, FILE* fp));
+static int PrintRecursion(FILE* out, void* node, size_t* NodeCounter, size_t rank, int DumpFunc(void* a, FILE* fp, void*), void* UserFunc);
 
 int BurnTree(tree_t* tree)
 {
@@ -36,12 +36,11 @@ int BurnBranch(void* node)
             BurnBranch(addr);
         }
     }
-    MEOW("FREEING NODE ON ADRESS %p\n", node);
     free(node);
     return 0;
 }
 
-int PrintTreeGraphViz(FILE* out, const tree_t tree, __attribute((unused)) const char* filename)
+int PrintTreeGraphViz(FILE* out, const tree_t tree, __attribute((unused)) const char* filename, void* UserFunc)
 {
     fprintf(out, 
     "digraph g {\n"
@@ -58,7 +57,7 @@ int PrintTreeGraphViz(FILE* out, const tree_t tree, __attribute((unused)) const 
 
 
     size_t NodeCounter = 0;
-    PrintRecursion(out, tree.root, &NodeCounter, 0, tree.DumpNode);
+    PrintRecursion(out, tree.root, &NodeCounter, 0, tree.DumpNode, UserFunc);
     fprintf(out, "}");
 
     // temporary solution ahead(впереди костыль)
@@ -76,7 +75,7 @@ int PrintTreeGraphViz(FILE* out, const tree_t tree, __attribute((unused)) const 
     return 0;
 }
 
-static int PrintRecursion(FILE* out, void* node, size_t* NodeCounter, size_t rank, int DFunc(void*, FILE*))
+static int PrintRecursion(FILE* out, void* node, size_t* NodeCounter, size_t rank, int DFunc(void*, FILE*, void*), void* UserFunc)
 {
     if(out == NULL)
     {
@@ -95,7 +94,7 @@ static int PrintRecursion(FILE* out, void* node, size_t* NodeCounter, size_t ran
     fprintf(out, "rank = %zu\n", rank);
     //fprintf(out, "\"label\" = \"{<parent> Parent = %p|<adr> Node Address =  %p| <type> Type = %zu|<f0> Data = ", *((char*)node + CalculateByteShift(node, PARENT_FIELD_CODE))
     //                                                                                                            , node, *(size_t*)node);
-    DFunc(node, out);
+    DFunc(node, out, UserFunc);
 
     //fprintf(out, "shape = \"record\"\n");
     //fprintf(out, "];\n");
@@ -114,7 +113,7 @@ static int PrintRecursion(FILE* out, void* node, size_t* NodeCounter, size_t ran
             fprintf(out, "node%zu: <d%zu> -> node%zu[color = \"blue\"];\n", curNode, i, *NodeCounter + 1);
             (*NodeCounter)++;
             rank++;
-            PrintRecursion(out, addr, NodeCounter, rank, DFunc);
+            PrintRecursion(out, addr, NodeCounter, rank, DFunc, UserFunc);
         }
     }  
     return 0;
@@ -146,8 +145,6 @@ size_t CalculateByteShift(const void* node, const int fieldcode)
         {
             size_t datasize = 0;
             memcpy(&datasize, (const void*)((const char*)node + CalculateByteShift(node, DATASIZE_FIELD_CODE)), sizeof(datasize));
-            MEOW("\nNode address: %p", node);
-            MEOW("\n## CALLER FUNCTION: %s.\n Located in %s:%d\nDatasize = %zu\n\n", __func__, __FILE__, __LINE__, datasize);
             return sizeof(bn.root) + sizeof(bn.parent) + sizeof(bn.type) + sizeof(bn.datasize) + datasize;
         }
         case DESCENDANTS_FIELD_CODE:
