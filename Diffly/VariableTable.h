@@ -14,7 +14,7 @@ struct Variable_t
 
 struct VariableTable_t
 {
-    Variable_t* Vars;
+    Variable_t Vars[16];
     int Index;
 };
 

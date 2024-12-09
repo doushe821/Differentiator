@@ -140,7 +140,7 @@ Token_t GetFunctionToken(const char* Buffer, size_t* index, __attribute((unused)
     else
     {
         tok = {VARIABLE_TOKEN, VarTable->Index};
-        memcpy(VarTable->Vars[VarTable->Index].name, funcName, strlen(funcName) + 1);
+        strncpy(VarTable->Vars->name, funcName, strlen(funcName));
         VarTable->Index++;
         return tok;
     }

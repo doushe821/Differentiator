@@ -2,7 +2,6 @@
 #include "Tokenisation.h"
 #include "RecursiveDescensionTokens.h"
 #include "Transitions.h"
-#include "Taylor.h"
 
 #include <assert.h>
 #include <time.h>
@@ -38,7 +37,6 @@ int main(int argc, char** argv)
     };
 
     VariableTable_t VarTable = {};
-    VarTable.Vars = (Variable_t*)calloc(MAX_VARIABLES, sizeof(Variable_t));
 
     size_t TokensNumber = 0;
     Token_t* TokenisedExpression = Tokenise(Expression, strlen(Expression), &VarTable, &TokensNumber);
@@ -100,7 +98,6 @@ int main(int argc, char** argv)
     fprintf(outTex, "\\end{document}");
     fclose(outTex);
 
-    free(VarTable.Vars);
     BurnTree(&diffTree);
     BurnTree(&tree);
     return 0;
