@@ -93,9 +93,13 @@ double CalculateNode(void* node, VariableTable_t* VarTable)
             GET_NODE_DESCENDANT(desc2, node, 1);
             int code = 0;
             GET_NODE_DATA(code, node);
+
             MEOW("OpCOde is %d, operation is %c\n", code, operations[code].symbol);
+
             double retVal = operations[code].CalcFunc(CalculateNode(desc1, VarTable), CalculateNode(desc2, VarTable));
+
             MEOW(MAGENTA_COLOR_ESC_SEQ"%lg\n" DEFAULT_COLOR_ESC_SEQ, retVal);
+
             return retVal;
         }
         case FUNCTION_TYPE_CODE:
