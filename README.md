@@ -20,15 +20,24 @@ This program can calculate any derivative algebraically or numerically. It is al
 - Has a tree dump function for debug purposes.
 
 **Implementation details**
-Program has lexer module to tokenize user's input and head tokens array to syntaxer. Expression is divide into Variables, Operations, Constants and Functions. Syntaxer is implemented by using recursive descent with following grammatics:
+Program has lexer module to tokenize user's input and head tokens array to syntaxer. Expression is divide into Variables, Operations, Constants and Functions. Syntaxer is implemented by using recursive descent with following grammatics (Bacus Naur form):
 
 // TODO
-Expression
-Sum
-Multiplication 
+
+<Expression>::=<Sum>+
+
+<Sum>::=<Multiplication>+
+
+Multiplication>::=<Power>+
+
 Power
-Bracket
-Function
-Number / Variable value
-// TODO
+
+<Bracket>::="("<Expression>+")"
+
+<Function>::=<Variable>
+
+<Variable>::= <Number>
+
+<Number>::= <1, 2, 3, 0.67, 0.02>+
+
 
