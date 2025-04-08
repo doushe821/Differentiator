@@ -7,15 +7,7 @@ This program can calculate any derivative algebraically or numerically. It is al
 
 - Can calculate derivative of any algebraic expression with 1 variable (made so user can use literas instead of constants).
 - Makes a .tex and .pdf file with results (there is step-by-step calcultation, result and Taylor's row coefficients with a plot). There is also tree dump version
-- It supports command line instructions:
-
---help 
-
---pdf [Output file name]
-
---point [double value] - point in which Taylor will be calculated (program can identify and prohibit actions such as dividing by zero)
-
---Taylor [integer value] - degree of Taylor's row approximation
+- It supports command line instructions.
 
 - Simplifies expressions.
 
@@ -51,7 +43,22 @@ Program uses matplotlib library to create plots for .tex file.
 
 **Usage**
 
-To build differentiator on your PC you can use git clone 
+To build differentiator on your PC you can use git clone and then use built-in Makefile, just make sure you have pip and pyplot installed.
+
+Differentiator has a default mode in which it doesn't calculate Taylor approximation (but still makes a TeX file).
+
+Differentiator's settings can be adjusted trhough command line.
+
+List of commands:
 
 
+--help 
+
+--pdf [Output file name]
+
+--point [double value] - point in which Taylor will be calculated (program can identify and prohibit actions such as dividing by zero)
+
+--Taylor [integer value] - degree of Taylor's row approximation
+
+Program also has error parser which will inform you if an error appears. You will be granted with a message containing information about the error.
 
